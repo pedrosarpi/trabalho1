@@ -1,0 +1,16 @@
+{
+    "1242": {
+        "nome": "Teclado",
+        "responsavel": "Pedro Sarpi",
+        "setor": "Laboratório",
+        "tipo": "NOTEBOOK",
+        "vulnerabilidades": [
+            {
+                "descricao": "Ergonomia",
+                "categoria": "teclas quebradas",
+                "severidade": "Média",
+                "status": "Aberta"
+            }
+        ]
+    }
+}
