@@ -221,6 +221,41 @@ def alterar_status_vulnerabilidade(vulnerabilidades):
     salvar_vulnerabilidades(vulnerabilidades)
     print(f'\nStatus da vulnerabilidade atualizado para {vulnerabilidade["status"]}.\n')
 
+def remover_vulnerabilidade(vulnerabilidades):
+    if not vulnerabilidades:
+        print('\nNenhuma vulnerabilidade cadastrada para remover.\n')
+        return
+
+    print('\nSelecione o ativo da vulnerabilidade:\n')
+    nomes_ativos = list(vulnerabilidades.keys())
+    for indice, nome in enumerate(nomes_ativos, start=1):
+        print(f'{indice} - {nome}')
+
+    try:
+        opcao_ativo = int(input('\nDigite o número do ativo: '))
+        nome_ativo = nomes_ativos[opcao_ativo - 1]
+    except (ValueError, IndexError):
+        print('\nAtivo inválido.\n')
+        return
+
+    if not vulnerabilidades[nome_ativo]:
+        print(f'\nO ativo {nome_ativo} não possui vulnerabilidades cadastradas.\n')
+        return
+
+    print(f'\nVulnerabilidades de {nome_ativo}:')
+    for indice, vulnerabilidade in enumerate(vulnerabilidades[nome_ativo], start=1):
+        print(f'{indice} - {vulnerabilidade["descricao"]}')
+
+    try:
+        opcao_vuln = int(input('\nDigite o número da vulnerabilidade para remover: '))
+        vulnerabilidade = vulnerabilidades[nome_ativo][opcao_vuln - 1]
+    except (ValueError, IndexError):
+        print('\nVulnerabilidade inválida.\n')
+        return
+
+    vulnerabilidades[nome_ativo].remove(vulnerabilidade)
+    salvar_vulnerabilidades(vulnerabilidades)
+    print(f'\nVulnerabilidade "{vulnerabilidade["descricao"]}" removida com sucesso do ativo {nome_ativo}.\n')
 
 def gerenciar_vulnerabilidades(vulnerabilidades, ativos):
     while True:
