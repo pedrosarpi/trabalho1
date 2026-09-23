@@ -1,6 +1,6 @@
 # Sprint 1 Project
 
-A minimal Python workspace initialized for local development.
+Desenvolvimento primário relacionado ao Sprint 1. Início do trabalho 1.
 
 ## Run
 
