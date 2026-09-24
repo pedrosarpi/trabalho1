@@ -72,6 +72,14 @@ def ler_inteiro(mensagem, minimo=None):
         print('\nDigite um número inteiro válido.\n')
 
 
+def ler_id_ativo():
+    while True:
+        valor = input('Digite o identificador do ativo (6 algarismos, por exemplo 000000): ').strip()
+        if len(valor) == 6 and all('0' <= caractere <= '9' for caractere in valor):
+            return valor
+        print('\nO identificador deve conter exatamente 6 algarismos numéricos.\n')
+
+
 def escolher_enum(mensagem, enum_classe):
     print(f'\n{mensagem}')
     for item in enum_classe:
@@ -104,7 +112,7 @@ def selecionar_ativo(ativos, mensagem):
 
 
 def cadastrar_ativo(dados):
-    ativo_id = str(ler_inteiro('Digite o identificador inteiro do ativo: ', 1))
+    ativo_id = ler_id_ativo()
     if ativo_id in dados['ativos']:
         print('\nJá existe um ativo com esse identificador.\n')
         return

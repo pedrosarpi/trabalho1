@@ -1,15 +1,15 @@
 {
     "ativos": {
-        "1234": {
+        "000001": {
             "nome": "Notebook",
-            "responsavel": "Pedro Sarpi",
-            "setor_localizacao": "Laboratório 1E-30",
+            "responsavel": "Pedro",
+            "setor_localizacao": "Sala 1E30",
             "tipo": "EQUIPAMENTO",
             "status": "ATIVO",
-            "descricao": "Notebook para estudos"
+            "descricao": "Notebook para estudo"
         }
     },
     "vulnerabilidades": {
-        "1234": []
+        "000001": []
     }
 }
