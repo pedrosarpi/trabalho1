@@ -3,18 +3,18 @@ import os
 from enum import Enum
 
 
-# Tarefa 13: Enumerações
+class TipoAtivo(Enum):
+    EQUIPAMENTO = 1
+    SISTEMA = 2
+    SERVICO = 3
+    DISPOSITIVO_DE_REDE = 4
+    BANCO_DE_DADOS = 5
+
+
 class StatusAtivo(Enum):
     ATIVO = 1
     INATIVO = 2
     EM_MANUTENCAO = 3
-
-
-class NivelCriticidade(Enum):
-    BAIXA = 1
-    MEDIA = 2
-    ALTA = 3
-    CRITICA = 4
 
 
 class SeveridadeVulnerabilidade(Enum):
@@ -31,377 +31,293 @@ class StatusTratamento(Enum):
     ACEITA_COMO_RISCO = 4
 
 
-# Tarefa 14: Persistência de dados
-ARQUIVO_VULN = 'vulnerabilidades.json'
+ARQUIVO_DADOS = 'vulnerabilidades.json'
 
 
-def carregar_vulnerabilidades():
-    if os.path.exists(ARQUIVO_VULN):
-        with open(ARQUIVO_VULN, 'r', encoding='utf-8') as arquivo:
-            dados = json.load(arquivo)
-            if isinstance(dados, dict):
-                return dados
-    return {}
-
-
-def salvar_vulnerabilidades(vulnerabilidades):
-    with open(ARQUIVO_VULN, 'w', encoding='utf-8') as arquivo:
-        json.dump(vulnerabilidades, arquivo, ensure_ascii=False, indent=4)
-
-
-def mostrar_cabecalho(titulo):
-    print(f'\n{"@" * 66}')
-    print(f'\n{titulo}\n')
-    print('@' * 66)
-
-
-def mostrar_status_ativo():
-    print('\nSelecione o Status do ativo: ')
-    for status in StatusAtivo:
-        print(f'{status.value} - {status.name}')
-
-
-def mostrar_criticidade():
-    print('\nSelecione o Nível de Criticidade do ativo: ')
-    for criticidade in NivelCriticidade:
-        print(f'{criticidade.value} - {criticidade.name}')
-
-
-def mostrar_severidades():
-    print('\nSelecione a severidade da vulnerabilidade:\n')
-    for severidade in SeveridadeVulnerabilidade:
-        print(f'{severidade.value} - {severidade.name}')
-
-
-def mostrar_status_tratamento():
-    print('\nSelecione o status do tratamento da vulnerabilidade:\n')
-    for status in StatusTratamento:
-        print(f'{status.value} - {status.name}')
-
-
-def listar_vulnerabilidades(vulnerabilidades):
-    if not vulnerabilidades:
-        print('\nNenhuma vulnerabilidade cadastrada.\n')
-        return
-
-    print('\nVulnerabilidades cadastradas:\n')
-    for nome_ativo, lista in vulnerabilidades.items():
-        if not lista:
-            continue
-        print(f'Ativo: {nome_ativo}')
-        for indice, vulnerabilidade in enumerate(lista, start=1):
-            print(
-                f"  {indice} - Descrição: {vulnerabilidade['descricao']} | "
-                f"Categoria: {vulnerabilidade['categoria']} | "
-                f"Severidade: {vulnerabilidade['severidade']} | "
-                f"Status: {vulnerabilidade['status']}"
-            )
-
-
-def cadastrar_vulnerabilidade(vulnerabilidades, ativos):
-    if not ativos:
-        print('\nCadastre um ativo antes de cadastrar vulnerabilidades.\n')
-        return
-
-    nomes_ativos = list(ativos.keys())
-    print('\nSelecione o ativo para cadastrar a vulnerabilidade:\n')
-    for indice, nome in enumerate(nomes_ativos, start=1):
-        print(f'{indice} - {nome}')
-
+def carregar_dados():
+    if not os.path.exists(ARQUIVO_DADOS):
+        return {'ativos': {}, 'vulnerabilidades': {}}
     try:
-        opcao_ativo = int(input('\nDigite o número do ativo: '))
-        nome_ativo = nomes_ativos[opcao_ativo - 1]
-    except (ValueError, IndexError):
-        print('\nOpção de ativo inválida.\n')
-        return
-
-    descricao = input('Digite a descrição da vulnerabilidade: ').strip()
-    categoria = input('Digite a categoria ou tipo da vulnerabilidade: ').strip()
-
-    mostrar_severidades()
-    severidade_digitada = int(input('\nDigite o número correspondente: '))
-    if severidade_digitada not in [s.value for s in SeveridadeVulnerabilidade]:
-        print('\nSeveridade inválida.\n')
-        return
-    severidade = SeveridadeVulnerabilidade(severidade_digitada).name
-
-    mostrar_status_tratamento()
-    status_digitado = int(input('\nDigite o número correspondente: '))
-    if status_digitado not in [s.value for s in StatusTratamento]:
-        print('\nStatus de tratamento inválido.\n')
-        return
-    status = StatusTratamento(status_digitado).name
-
-    vulnerabilidades.setdefault(nome_ativo, [])
-    vulnerabilidades[nome_ativo].append({
-        'descricao': descricao,
-        'categoria': categoria,
-        'severidade': severidade,
-        'status': status,
-    })
-
-    salvar_vulnerabilidades(vulnerabilidades)
-    print(f'\nVulnerabilidade cadastrada com sucesso para o ativo {nome_ativo}.\n')
+        with open(ARQUIVO_DADOS, 'r', encoding='utf-8') as arquivo:
+            dados = json.load(arquivo)
+    except (OSError, json.JSONDecodeError):
+        print('\nNão foi possível ler o arquivo de dados.\n')
+        return {'ativos': {}, 'vulnerabilidades': {}}
+    if isinstance(dados, dict) and 'ativos' in dados and 'vulnerabilidades' in dados:
+        return dados
+    return {'ativos': {}, 'vulnerabilidades': dados if isinstance(dados, dict) else {}}
 
 
-def comparar_vulnerabilidades(vulnerabilidades, ativos):
+def salvar_dados(dados):
+    with open(ARQUIVO_DADOS, 'w', encoding='utf-8') as arquivo:
+        json.dump(dados, arquivo, ensure_ascii=False, indent=4)
+
+
+def ler_texto(mensagem, obrigatorio=True):
+    while True:
+        valor = input(mensagem).strip()
+        if valor or not obrigatorio:
+            return valor
+        print('\nEste campo não pode ficar vazio.\n')
+
+
+def ler_inteiro(mensagem, minimo=None):
+    while True:
+        try:
+            valor = int(input(mensagem))
+            if minimo is None or valor >= minimo:
+                return valor
+        except ValueError:
+            pass
+        print('\nDigite um número inteiro válido.\n')
+
+
+def escolher_enum(mensagem, enum_classe):
+    print(f'\n{mensagem}')
+    for item in enum_classe:
+        print(f'{item.value} - {item.name}')
+    valores = [item.value for item in enum_classe]
+    while True:
+        escolha = ler_inteiro('\nDigite o número correspondente: ')
+        if escolha in valores:
+            return enum_classe(escolha).name
+        print('\nOpção inválida.\n')
+
+
+def cabecalho(titulo):
+    print(f'\n{"@" * 66}\n\n{titulo}\n\n{"@" * 66}\n')
+
+
+def selecionar_ativo(ativos, mensagem):
     if not ativos:
         print('\nNenhum ativo cadastrado.\n')
+        return None
+    print(f'\n{mensagem}\n')
+    ids = list(ativos)
+    for indice, ativo_id in enumerate(ids, 1):
+        print(f'{indice} - {ativos[ativo_id]["nome"]}')
+    opcao = ler_inteiro('\nDigite o número do ativo: ')
+    if not 1 <= opcao <= len(ids):
+        print('\nOpção de ativo inválida.\n')
+        return None
+    return ids[opcao - 1]
+
+
+def cadastrar_ativo(dados):
+    ativo_id = str(ler_inteiro('Digite o identificador inteiro do ativo: ', 1))
+    if ativo_id in dados['ativos']:
+        print('\nJá existe um ativo com esse identificador.\n')
         return
-
-    nomes_ativos = list(ativos.keys())
-    print('\nEscolha dois ativos para comparar:\n')
-    for indice, nome in enumerate(nomes_ativos, start=1):
-        print(f'{indice} - {nome}')
-
-    try:
-        ativo1 = nomes_ativos[int(input('Digite o número do primeiro ativo: ')) - 1]
-        ativo2 = nomes_ativos[int(input('Digite o número do segundo ativo: ')) - 1]
-    except (ValueError, IndexError):
-        print('\nAtivo inválido.\n')
+    nome = ler_texto('Digite o nome ou hostname do ativo: ')
+    if any(a['nome'].casefold() == nome.casefold() for a in dados['ativos'].values()):
+        print('\nJá existe um ativo com esse nome ou hostname.\n')
         return
-
-    if ativo1 == ativo2:
-        print('\nEscolha ativos diferentes.\n')
-        return
-
-    if ativo1 not in vulnerabilidades:
-        vulnerabilidades[ativo1] = []
-    if ativo2 not in vulnerabilidades:
-        vulnerabilidades[ativo2] = []
-
-    descricoes_1 = {v['descricao'] for v in vulnerabilidades[ativo1]}
-    descricoes_2 = {v['descricao'] for v in vulnerabilidades[ativo2]}
-
-    print(f'\nVulnerabilidades do {ativo1}: {descricoes_1}\n')
-    print(f'Vulnerabilidades do {ativo2}: {descricoes_2}\n')
-    print(f'Vulnerabilidades em comum: {descricoes_1.intersection(descricoes_2)}\n')
-    print(f'Todas as vulnerabilidades: {descricoes_1.union(descricoes_2)}\n')
-
-
-def alterar_status_vulnerabilidade(vulnerabilidades):
-    if not vulnerabilidades:
-        print('\nNenhuma vulnerabilidade cadastrada para alterar.\n')
-        return
-
-    print('\nSelecione o ativo da vulnerabilidade:\n')
-    nomes_ativos = list(vulnerabilidades.keys())
-    for indice, nome in enumerate(nomes_ativos, start=1):
-        print(f'{indice} - {nome}')
-
-    try:
-        opcao_ativo = int(input('\nDigite o número do ativo: '))
-        nome_ativo = nomes_ativos[opcao_ativo - 1]
-    except (ValueError, IndexError):
-        print('\nAtivo inválido.\n')
-        return
-
-    if not vulnerabilidades[nome_ativo]:
-        print(f'\nO ativo {nome_ativo} não possui vulnerabilidades cadastradas.\n')
-        return
-
-    print(f'\nVulnerabilidades de {nome_ativo}:')
-    for indice, vulnerabilidade in enumerate(vulnerabilidades[nome_ativo], start=1):
-        print(f'{indice} - {vulnerabilidade["descricao"]}')
-
-    try:
-        opcao_vuln = int(input('\nDigite o número da vulnerabilidade para alterar o status: '))
-        vulnerabilidade = vulnerabilidades[nome_ativo][opcao_vuln - 1]
-    except (ValueError, IndexError):
-        print('\nVulnerabilidade inválida.\n')
-        return
-
-    mostrar_status_tratamento()
-    novo_status = int(input('\nDigite o número do novo status: '))
-    if novo_status not in [s.value for s in StatusTratamento]:
-        print('\nStatus inválido.\n')
-        return
-
-    vulnerabilidade['status'] = StatusTratamento(novo_status).name
-    salvar_vulnerabilidades(vulnerabilidades)
-    print(f'\nStatus da vulnerabilidade atualizado para {vulnerabilidade["status"]}.\n')
-
-def remover_vulnerabilidade(vulnerabilidades):
-    if not vulnerabilidades:
-        print('\nNenhuma vulnerabilidade cadastrada para remover.\n')
-        return
-
-    print('\nSelecione o ativo da vulnerabilidade:\n')
-    nomes_ativos = list(vulnerabilidades.keys())
-    for indice, nome in enumerate(nomes_ativos, start=1):
-        print(f'{indice} - {nome}')
-
-    try:
-        opcao_ativo = int(input('\nDigite o número do ativo: '))
-        nome_ativo = nomes_ativos[opcao_ativo - 1]
-    except (ValueError, IndexError):
-        print('\nAtivo inválido.\n')
-        return
-
-    if not vulnerabilidades[nome_ativo]:
-        print(f'\nO ativo {nome_ativo} não possui vulnerabilidades cadastradas.\n')
-        return
-
-    print(f'\nVulnerabilidades de {nome_ativo}:')
-    for indice, vulnerabilidade in enumerate(vulnerabilidades[nome_ativo], start=1):
-        print(f'{indice} - {vulnerabilidade["descricao"]}')
-
-    try:
-        opcao_vuln = int(input('\nDigite o número da vulnerabilidade para remover: '))
-        vulnerabilidade = vulnerabilidades[nome_ativo][opcao_vuln - 1]
-    except (ValueError, IndexError):
-        print('\nVulnerabilidade inválida.\n')
-        return
-
-    vulnerabilidades[nome_ativo].remove(vulnerabilidade)
-    salvar_vulnerabilidades(vulnerabilidades)
-    print(f'\nVulnerabilidade "{vulnerabilidade["descricao"]}" removida com sucesso do ativo {nome_ativo}.\n')
-
-def gerenciar_vulnerabilidades(vulnerabilidades, ativos):
-    while True:
-        print('\nGerenciamento de Vulnerabilidades\n')
-        print('1 - Cadastrar vulnerabilidade')
-        print('2 - Listar vulnerabilidades')
-        print('3 - Comparar vulnerabilidades')
-        print('4 - Alterar status da vulnerabilidade')
-        print('5 - Voltar')
-
-        try:
-            opcao = int(input('\nDigite a opção: '))
-        except ValueError:
-            print('\nOpção inválida!\n')
-            continue
-
-        if opcao == 1:
-            cadastrar_vulnerabilidade(vulnerabilidades, ativos)
-        elif opcao == 2:
-            listar_vulnerabilidades(vulnerabilidades)
-        elif opcao == 3:
-            comparar_vulnerabilidades(vulnerabilidades, ativos)
-        elif opcao == 4:
-            alterar_status_vulnerabilidade(vulnerabilidades)
-        elif opcao == 5:
-            break
-        else:
-            print('\nOpção inválida!\n')
-
-
-# Tarefa 09: Funções
-def ativos():
-    ativos = {
-        'Notebook': {'IP': '192.168.10.15', 'OS': 'Windows 11', 'Status': 'ATIVO', 'Criticidade': 'ALTA'},
-        'Roteador': {'IP': '10.0.0.1', 'OS': 'Linux', 'Status': 'ATIVO', 'Criticidade': 'MEDIA'},
-        'Servidor': {'IP': '172.16.0.22', 'OS': 'Ubuntu Server', 'Status': 'ATIVO', 'Criticidade': 'CRITICA'},
-        'Impressora': {'IP': '192.168.20.30', 'OS': 'Embedded', 'Status': 'ATIVO', 'Criticidade': 'MEDIA'},
-        'Software de segurança': {'IP': '10.10.10.55', 'OS': 'Windows Server', 'Status': 'ATIVO', 'Criticidade': 'ALTA'},
+    dados['ativos'][ativo_id] = {
+        'nome': nome,
+        'responsavel': ler_texto('Digite o responsável: '),
+        'setor_localizacao': ler_texto('Digite o setor ou localização: '),
+        'tipo': escolher_enum('Selecione o tipo geral do ativo:', TipoAtivo),
+        'status': escolher_enum('Selecione o status do ativo:', StatusAtivo),
+        'descricao': ler_texto('Digite a descrição do ativo (opcional): ', False),
     }
+    dados['vulnerabilidades'].setdefault(ativo_id, [])
+    salvar_dados(dados)
+    print(f'\nAtivo {nome} cadastrado com sucesso.\n')
 
-    categorias = ('Eletrônico', 'Software', 'Hardware')
-    vulnerabilidades = carregar_vulnerabilidades()
 
-    while True:
-        mostrar_cabecalho('Bem-vindo ao Sistema de Gerenciamento de Ativos e Vulnerabilidades')
-        print('1 - Cadastrar ativo')
-        print('2 - Listar ativos')
-        print('3 - Remover ativo')
-        print('4 - Pesquisar ativo')
-        print('5 - Categorias')
-        print('6 - Gerenciar vulnerabilidades')
-        print('7 - Sair')
+def listar_ativos(dados):
+    if not dados['ativos']:
+        print('\nNenhum ativo cadastrado.\n')
+        return
+    print('\nAtivos cadastrados:\n')
+    for ativo_id, ativo in dados['ativos'].items():
+        tipo = ativo.get('tipo', 'NAO_INFORMADO')
+        print(f'{ativo_id} - {ativo["nome"]} | Tipo: {tipo} | Status: {ativo["status"]}')
 
-        try:
-            opcao = int(input('\nDigite uma opção: '))
-        except ValueError:
-            print('\nDigite uma opção válida!\n')
+
+def exibir_ativo(ativo_id, ativo, vulnerabilidades):
+    print(f'\nID: {ativo_id}')
+    print(f'Nome/hostname: {ativo["nome"]}')
+    print(f'Responsável: {ativo["responsavel"]}')
+    print(f'Setor/localização: {ativo["setor_localizacao"]}')
+    print(f'Tipo: {ativo.get("tipo", "NAO_INFORMADO")}')
+    print(f'Status: {ativo["status"]}')
+    print(f'Descrição: {ativo["descricao"] or "Não informada"}')
+    print(f'Vulnerabilidades: {len(vulnerabilidades.get(str(ativo_id), []))}\n')
+
+
+def pesquisar_ativo(dados):
+    termo = ler_texto('Digite o ID ou nome/hostname do ativo: ')
+    resultado = [(chave, ativo) for chave, ativo in dados['ativos'].items()
+                 if chave == termo or termo.casefold() in ativo['nome'].casefold()]
+    if not resultado:
+        print('\nAtivo não encontrado.\n')
+    elif len(resultado) > 1:
+        print('\nMais de um ativo corresponde à busca:\n')
+        for chave, ativo in resultado:
+            print(f'{chave} - {ativo["nome"]}')
+    else:
+        exibir_ativo(resultado[0][0], resultado[0][1], dados['vulnerabilidades'])
+
+
+def atualizar_ativo(dados):
+    ativo_id = selecionar_ativo(dados['ativos'], 'Selecione o ativo para atualizar:')
+    if ativo_id is None:
+        return
+    ativo = dados['ativos'][ativo_id]
+    print('\nPressione Enter para manter o valor atual.\n')
+    for campo, rotulo in [('nome', 'Nome/hostname'), ('responsavel', 'Responsável'),
+                          ('setor_localizacao', 'Setor/localização'), ('descricao', 'Descrição')]:
+        novo = input(f'{rotulo} [{ativo[campo]}]: ').strip()
+        if novo:
+            ativo[campo] = novo
+    for campo, classe in [('tipo', TipoAtivo), ('status', StatusAtivo)]:
+        valor_atual = ativo.get(campo, 'NAO_INFORMADO')
+        if input(f'Alterar {campo} ({valor_atual})? [s/N]: ').strip().casefold() == 's':
+            ativo[campo] = escolher_enum(f'Selecione o novo {campo}:', classe)
+    salvar_dados(dados)
+    print('\nAtivo atualizado com sucesso.\n')
+
+
+def remover_ativo(dados):
+    ativo_id = selecionar_ativo(dados['ativos'], 'Selecione o ativo para remover:')
+    if ativo_id is None:
+        return
+    nome = dados['ativos'][ativo_id]['nome']
+    if input(f'Remover {nome} e suas vulnerabilidades? [s/N]: ').strip().casefold() != 's':
+        print('\nRemoção cancelada.\n')
+        return
+    del dados['ativos'][ativo_id]
+    dados['vulnerabilidades'].pop(ativo_id, None)
+    salvar_dados(dados)
+    print(f'\nAtivo {nome} e suas vulnerabilidades foram removidos.\n')
+
+
+def cadastrar_vulnerabilidade(dados):
+    ativo_id = selecionar_ativo(dados['ativos'], 'Selecione o ativo para cadastrar a vulnerabilidade:')
+    if ativo_id is None:
+        return
+    vulnerabilidade = {
+        'descricao': ler_texto('Digite a descrição da vulnerabilidade: '),
+        'categoria': ler_texto('Digite a categoria ou tipo da vulnerabilidade: '),
+        'severidade': escolher_enum('Selecione a severidade:', SeveridadeVulnerabilidade),
+        'status': escolher_enum('Selecione o status do tratamento:', StatusTratamento),
+    }
+    dados['vulnerabilidades'].setdefault(ativo_id, []).append(vulnerabilidade)
+    salvar_dados(dados)
+    print('\nVulnerabilidade cadastrada com sucesso.\n')
+
+
+def listar_vulnerabilidades(dados):
+    encontradas = False
+    print('\nVulnerabilidades cadastradas:\n')
+    for ativo_id, lista in dados['vulnerabilidades'].items():
+        if not lista:
             continue
+        encontradas = True
+        nome = dados['ativos'].get(str(ativo_id), {}).get('nome', 'Ativo removido')
+        print(f'Ativo {ativo_id} - {nome}')
+        for indice, vuln in enumerate(lista, 1):
+            print(f'  {indice} - Descrição: {vuln["descricao"]} | Categoria: {vuln["categoria"]} | '
+                  f'Severidade: {vuln["severidade"]} | Status: {vuln["status"]}')
+    if not encontradas:
+        print('Nenhuma vulnerabilidade cadastrada.\n')
 
+
+def visualizar_vulnerabilidades(dados):
+    ativo_id = selecionar_ativo(dados['ativos'], 'Selecione o ativo:')
+    if ativo_id is None:
+        return
+    lista = dados['vulnerabilidades'].get(ativo_id, [])
+    if not lista:
+        print('\nO ativo está sem vulnerabilidades registradas.\n')
+        return
+    print(f'\nVulnerabilidades de {dados["ativos"][ativo_id]["nome"]}:\n')
+    for indice, vuln in enumerate(lista, 1):
+        print(f'{indice} - Descrição: {vuln["descricao"]} | Severidade: {vuln["severidade"]} | Status: {vuln["status"]}')
+
+
+def alterar_status_vulnerabilidade(dados):
+    ativo_id = selecionar_ativo(dados['ativos'], 'Selecione o ativo da vulnerabilidade:')
+    if ativo_id is None:
+        return
+    lista = dados['vulnerabilidades'].get(ativo_id, [])
+    if not lista:
+        print('\nEsse ativo não possui vulnerabilidades cadastradas.\n')
+        return
+    for indice, vuln in enumerate(lista, 1):
+        print(f'{indice} - {vuln["descricao"]}')
+    opcao = ler_inteiro('Digite o número da vulnerabilidade: ')
+    if not 1 <= opcao <= len(lista):
+        print('\nVulnerabilidade inválida.\n')
+        return
+    lista[opcao - 1]['status'] = escolher_enum('Selecione o novo status:', StatusTratamento)
+    salvar_dados(dados)
+    print('\nStatus atualizado com sucesso.\n')
+
+
+def remover_vulnerabilidade(dados):
+    ativo_id = selecionar_ativo(dados['ativos'], 'Selecione o ativo da vulnerabilidade:')
+    if ativo_id is None:
+        return
+    lista = dados['vulnerabilidades'].get(ativo_id, [])
+    if not lista:
+        print('\nEsse ativo não possui vulnerabilidades cadastradas.\n')
+        return
+    for indice, vuln in enumerate(lista, 1):
+        print(f'{indice} - {vuln["descricao"]}')
+    opcao = ler_inteiro('Digite o número da vulnerabilidade para remover: ')
+    if not 1 <= opcao <= len(lista):
+        print('\nVulnerabilidade inválida.\n')
+        return
+    lista.pop(opcao - 1)
+    salvar_dados(dados)
+    print('\nVulnerabilidade removida com sucesso.\n')
+
+
+def gerenciar_vulnerabilidades(dados):
+    while True:
+        print('\nGerenciamento de Vulnerabilidades\n1 - Cadastrar vulnerabilidade\n2 - Listar vulnerabilidades\n'
+              '3 - Visualizar vulnerabilidades de um ativo\n4 - Alterar status\n5 - Remover vulnerabilidade\n6 - Voltar')
+        opcao = ler_inteiro('\nDigite a opção: ')
         if opcao == 1:
-            while True:
-                nome = input('Digite o nome do ativo: ').strip()
-                if not nome:
-                    print('\nNome do ativo não pode ficar vazio.\n')
-                    continue
-                if nome in ativos:
-                    print(f'\nO ativo {nome} já existe.\n')
-                    break
-
-                categoria = input('Digite a categoria do ativo: ').strip()
-                if categoria not in categorias:
-                    print(f'\nCategoria {categoria} não encontrada! Informe uma categoria existente\n')
-                    continue
-
-                sistema_operacional = input('Digite o sistema operacional do ativo: ').strip()
-                ip = input('Digite o IP do ativo: ').strip()
-
-                mostrar_status_ativo()
-                status_selecionado = int(input('\nDigite o número correspondente ao status desejado: '))
-                if status_selecionado not in [status.value for status in StatusAtivo]:
-                    print('\nStatus inválido! Informe um status existente\n')
-                    continue
-                status = StatusAtivo(status_selecionado).name
-
-                mostrar_criticidade()
-                criticidade_selecionada = int(input('\nDigite o número correspondente ao nível de criticidade desejado: '))
-                if criticidade_selecionada not in [criticidade.value for criticidade in NivelCriticidade]:
-                    print('\nNível de criticidade inválido! Informe um nível existente\n')
-                    continue
-                criticidade = NivelCriticidade(criticidade_selecionada).name
-
-                ativos[nome] = {
-                    'IP': ip,
-                    'OS': sistema_operacional,
-                    'Status': status,
-                    'Criticidade': criticidade,
-                }
-                vulnerabilidades.setdefault(nome, [])
-                salvar_vulnerabilidades(vulnerabilidades)
-                print(f'\nAtivo {nome} cadastrado com sucesso!\n')
-                break
-
+            cadastrar_vulnerabilidade(dados)
         elif opcao == 2:
-            print('\nAtivos cadastrados:\n')
-            for nome in ativos:
-                print(nome)
-
+            listar_vulnerabilidades(dados)
         elif opcao == 3:
-            nome = input('Digite o nome do ativo a ser removido: ').strip().capitalize()
-            if nome in ativos:
-                del ativos[nome]
-                if nome in vulnerabilidades:
-                    del vulnerabilidades[nome]
-                salvar_vulnerabilidades(vulnerabilidades)
-                print(f'\nAtivo {nome} removido com sucesso!\n')
-            else:
-                print(f'\nAtivo {nome} não encontrado!\n')
-
+            visualizar_vulnerabilidades(dados)
         elif opcao == 4:
-            nome = input('Digite o nome do ativo a ser pesquisado: ').strip().capitalize()
-            if nome in ativos:
-                print(f'\nAtivo encontrado!\n')
-                print(ativos[nome])
-            else:
-                print(f'\nAtivo não encontrado!\n')
-
+            alterar_status_vulnerabilidade(dados)
         elif opcao == 5:
-            print('\nCategorias de ativos:\n')
-            for categoria in categorias:
-                print(categoria)
-
-            opcao_categoria = int(input('\nDigite a opção desejada: \n1 - Desempacotar categorias\n2 - Voltar\n\n'))
-            if opcao_categoria == 1:
-                print('\nCategorias desempacotadas:\n')
-                cat1, cat2, cat3 = categorias
-                print(f'Categoria 1: {cat1}\nCategoria 2: {cat2}\nCategoria 3: {cat3}\n')
-            elif opcao_categoria != 2:
-                print('\nDigite uma opção válida!\n')
-
+            remover_vulnerabilidade(dados)
         elif opcao == 6:
-            gerenciar_vulnerabilidades(vulnerabilidades, ativos)
+            return
+        else:
+            print('\nOpção inválida.\n')
 
+
+def ativos():
+    dados = carregar_dados()
+    while True:
+        cabecalho('Sistema de Gerenciamento de Ativos e Vulnerabilidades')
+        print('1 - Cadastrar ativo\n2 - Listar ativos\n3 - Pesquisar ativo por ID ou nome\n'
+              '4 - Atualizar ativo\n5 - Remover ativo\n6 - Gerenciar vulnerabilidades\n7 - Sair')
+        opcao = ler_inteiro('\nDigite uma opção: ')
+        if opcao == 1:
+            cadastrar_ativo(dados)
+        elif opcao == 2:
+            listar_ativos(dados)
+        elif opcao == 3:
+            pesquisar_ativo(dados)
+        elif opcao == 4:
+            atualizar_ativo(dados)
+        elif opcao == 5:
+            remover_ativo(dados)
+        elif opcao == 6:
+            gerenciar_vulnerabilidades(dados)
         elif opcao == 7:
-            print('\nEspero te ver novamente!!\n')
-            break
-
+            print('\nEspero te ver novamente!\n')
+            return
         else:
             print('\nDigite uma opção válida!\n')
 

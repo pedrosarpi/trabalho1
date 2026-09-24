@@ -1,10 +1,15 @@
 {
-    "Notebook": [
-        {
-            "descricao": "Senha fraca",
-            "categoria": "Configuração insegura",
-            "severidade": "ALTA",
-            "status": "ABERTA"
+    "ativos": {
+        "1234": {
+            "nome": "Notebook",
+            "responsavel": "Pedro Sarpi",
+            "setor_localizacao": "Laboratório 1E-30",
+            "tipo": "EQUIPAMENTO",
+            "status": "ATIVO",
+            "descricao": "Notebook para estudos"
         }
-    ]
+    },
+    "vulnerabilidades": {
+        "1234": []
+    }
 }
