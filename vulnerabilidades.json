@@ -1,0 +1,10 @@
+{
+    "Notebook": [
+        {
+            "descricao": "Senha fraca",
+            "categoria": "Configuração insegura",
+            "severidade": "ALTA",
+            "status": "ABERTA"
+        }
+    ]
+}
