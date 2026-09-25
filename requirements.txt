@@ -1,1 +1,1 @@
-# Add project dependencies here.
+# Projeto não apresenta dependências externas, portanto não há necessidade de instalar pacotes adicionais.
