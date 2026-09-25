@@ -16,5 +16,5 @@ identificadas neles e qual é a situação de tratamento dessas vulnerabilidades
 1. Clone este repositório na sua máquina:
 
 ```bash
-git clone [https://github.com/pedrosarpi/trabalho1.git](https://github.com/pedrosarpi/trabalho1.git)
+git clone https://github.com/pedrosarpi/trabalho1.git
 ```
