@@ -40,6 +40,8 @@ class StatusTratamento(Enum):
 
 ARQUIVO_DADOS = 'vulnerabilidades.json'
 
+# Enum: usado para criar categorias fixas e legíveis, como tipos e status.
+
 
 def carregar_dados():
     if not os.path.exists(ARQUIVO_DADOS):
@@ -56,6 +58,7 @@ def carregar_dados():
 
 
 def salvar_dados(dados):
+    # json.dump: grava o dicionário em arquivo JSON, preservando o conteúdo do sistema.
     with open(ARQUIVO_DADOS, 'w', encoding='utf-8') as arquivo:
         json.dump(dados, arquivo, ensure_ascii=False, indent=4)
 
@@ -100,7 +103,9 @@ def escolher_enum(mensagem, enum_classe):
 
 
 def centralizar_texto(texto, largura=66):
+    # regex: remove as sequências ANSI da cor para calcular o tamanho real do texto.
     texto_limpo = re.sub(r'\x1b\[[0-9;]*m', '', texto)
+    # Cálculo de espaçamento para centralizar o título visualmente.
     espacos = max((largura - len(texto_limpo)) // 2, 0)
     return ' ' * espacos + texto
 
@@ -127,6 +132,7 @@ def selecionar_ativo(ativos, mensagem):
         mensagem_aviso('Nenhum ativo cadastrado.')
         return None
     print(f'\n{mensagem}\n')
+    # list() e enumerate(): transformam chaves do dicionário em lista e numeram as opções.
     ids = list(ativos)
     for indice, ativo_id in enumerate(ids, 1):
         print(f'{indice} - {ativos[ativo_id]["nome"]}')
@@ -143,6 +149,7 @@ def cadastrar_ativo(dados):
         mensagem_erro('Já existe um ativo com esse identificador.')
         return
     nome = ler_texto('Digite o nome ou hostname do ativo: ')
+    # any() + casefold(): valida se já existe um ativo com nome igual ignorando maiúsculas/minúsculas.
     if any(a['nome'].casefold() == nome.casefold() for a in dados['ativos'].values()):
         mensagem_erro('Já existe um ativo com esse nome ou hostname.')
         return
@@ -154,6 +161,7 @@ def cadastrar_ativo(dados):
         'status': escolher_enum('Selecione o status do ativo:', StatusAtivo),
         'descricao': ler_texto('Digite a descrição do ativo (opcional): ', False),
     }
+    # setdefault(): cria a lista de vulnerabilidades do ativo se ela ainda não existir.
     dados['vulnerabilidades'].setdefault(ativo_id, [])
     salvar_dados(dados)
     mensagem_sucesso(f'Ativo {nome} cadastrado com sucesso.')
@@ -182,6 +190,7 @@ def exibir_ativo(ativo_id, ativo, vulnerabilidades):
 
 def pesquisar_ativo(dados):
     termo = ler_texto('Digite o ID ou nome/hostname do ativo: ')
+    # List comprehension + items(): busca os ativos por ID ou parte do nome sem diferenciar maiúsculas/minúsculas.
     resultado = [(chave, ativo) for chave, ativo in dados['ativos'].items()
                  if chave == termo or termo.casefold() in ativo['nome'].casefold()]
     if not resultado:
@@ -310,6 +319,7 @@ def remover_vulnerabilidade(dados):
 
 
 def gerenciar_vulnerabilidades(dados):
+    # while True: mantém o submenu aberto até o usuário sair da opção.
     while True:
         print('\nGerenciamento de Vulnerabilidades\n1 - Cadastrar vulnerabilidade\n2 - Listar vulnerabilidades\n'
               '3 - Visualizar vulnerabilidades de um ativo\n4 - Alterar status\n5 - Remover vulnerabilidade\n6 - Voltar')
@@ -332,6 +342,7 @@ def gerenciar_vulnerabilidades(dados):
 
 def ativos():
     dados = carregar_dados()
+    # Loop principal do menu: estrutura de repetição para manter o sistema em execução.
     while True:
         cabecalho(f'{AZUL}Sistema de Gerenciamento de Ativos e Vulnerabilidades{RESET}')
         print('1 - Cadastrar ativo\n2 - Listar ativos\n3 - Pesquisar ativo por ID ou nome\n'
