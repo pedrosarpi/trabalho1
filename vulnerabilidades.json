@@ -1,15 +1,4 @@
 {
-    "ativos": {
-        "000001": {
-            "nome": "Notebook",
-            "responsavel": "Pedro",
-            "setor_localizacao": "Sala 1E30",
-            "tipo": "EQUIPAMENTO",
-            "status": "ATIVO",
-            "descricao": "Notebook para estudo"
-        }
-    },
-    "vulnerabilidades": {
-        "000001": []
-    }
+    "ativos": {},
+    "vulnerabilidades": {}
 }
