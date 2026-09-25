@@ -6,12 +6,12 @@ equipamentos, sistemas ou serviços existem em uma organização, quais vulnerab
 identificadas neles e qual é a situação de tratamento dessas vulnerabilidades.
 
 
-# feito com:
+# Feito com:
 * Python 3
 * VSCode
 * Git e GitHub
 
-# exec:
+# Exec:
 
 1. Clone este repositório na sua máquina:
 
